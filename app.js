@@ -77,18 +77,78 @@
     return state.q.toLowerCase().split(/\s+/).every(function (w) { return hay.indexOf(w) !== -1; });
   }
 
-  function vidCol(title, items) {
-    if (!items.length) return "";
-    return '<div><h4>' + title + '</h4><div class="vlist">' + items.map(function (v) {
-      return '<a class="vid" href="' + yt(v[1]) + '" target="_blank" rel="noopener noreferrer"><i class="ph ph-youtube-logo" aria-hidden="true"></i><span>' + esc(v[0]) + '</span></a>';
-    }).join("") + "</div></div>";
+  /* Video player */
+  var VIDEOS = window.VIDEOS || {};
+  var sources = {};
+
+  function mergeVids(entries) {
+    var lists = entries.map(function (e) { return (VIDEOS[e[1]] || []).slice(); });
+    var out = [], seen = {};
+    for (var round = 0; round < 3; round++) {
+      lists.forEach(function (l) {
+        var v = l[round];
+        if (v && !seen[v.id]) { seen[v.id] = 1; out.push(v); }
+      });
+    }
+    return out.slice(0, 6);
+  }
+  function groupsFor(t) {
+    var gs = [];
+    if (state.scope !== "ng" && t.g.length) gs.push({ key: "g", label: "Global", vids: mergeVids(t.g), q: t.g[0][1] });
+    if (state.scope !== "global" && t.n.length) gs.push({ key: "n", label: "Nigeria context", vids: mergeVids(t.n), q: t.n[0][1] });
+    return gs;
+  }
+  function thumb(id, q) { return "https://i.ytimg.com/vi/" + id + "/" + (q || "hqdefault") + ".jpg"; }
+
+  function renderPlayer(el, playing) {
+    var groups = sources[el.dataset.src]();
+    var gi = Math.max(0, groups.map(function (g) { return g.key; }).indexOf(el.dataset.tab));
+    var grp = groups[gi];
+    if (!grp) { el.innerHTML = ""; return; }
+    var idx = Math.min(+el.dataset.idx || 0, Math.max(grp.vids.length - 1, 0));
+    el.dataset.tab = grp.key; el.dataset.idx = idx;
+    el.classList.toggle("playing", !!playing);
+    var v = grp.vids[idx];
+    var more = '<a class="more" href="' + yt(grp.q) + '" target="_blank" rel="noopener noreferrer">Search more on YouTube <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>';
+
+    var tabs = groups.length > 1
+      ? '<div class="ptabs" role="tablist" aria-label="Video set">' + groups.map(function (g) {
+          return '<button type="button" role="tab" data-tab="' + g.key + '" aria-selected="' + (g === grp) + '">' + g.label + ' <span class="n">' + g.vids.length + "</span></button>";
+        }).join("") + "</div>"
+      : '<div class="ptabs single"><span>' + grp.label + "</span></div>";
+
+    if (!v) { el.innerHTML = tabs + '<p class="pempty">No embeddable videos found for this set yet.</p>' + more; return; }
+
+    var stage = playing
+      ? '<iframe src="https://www.youtube-nocookie.com/embed/' + v.id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&hl=en" title="' + esc(v.title) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>'
+      : '<button type="button" class="poster" data-play aria-label="Play: ' + esc(v.title) + '">' +
+        '<img src="' + thumb(v.id) + '" alt="" loading="lazy" width="480" height="360">' +
+        '<span class="play-btn" aria-hidden="true"><i class="ph-fill ph-play"></i></span>' +
+        (v.dur ? '<span class="dur">' + esc(v.dur) + "</span>" : "") + "</button>";
+
+    var info = '<div class="vinfo"><h5>' + esc(v.title) + '</h5><p><strong>' + esc(v.channel) + "</strong>" +
+      (v.views ? "<span>" + esc(v.views.replace(/\s*views?/i, "")) + " views</span>" : "") +
+      (v.when ? "<span>" + esc(v.when) + "</span>" : "") +
+      '<a href="https://www.youtube.com/watch?v=' + v.id + '" target="_blank" rel="noopener noreferrer">Open on YouTube</a></p></div>';
+
+    var list = grp.vids.length > 1
+      ? '<ul class="plist" aria-label="Playlist">' + grp.vids.map(function (x, i) {
+          return '<li><button type="button" data-pick="' + i + '"' + (i === idx ? ' aria-current="true"' : "") + ">" +
+            '<span class="th"><img src="' + thumb(x.id, "mqdefault") + '" alt="" loading="lazy" width="168" height="94"><span class="dur">' + esc(x.dur) + "</span></span>" +
+            '<span class="lt"><span class="lt-title">' + esc(x.title) + '</span><span class="lt-ch">' + esc(x.channel) + (i === idx ? " (now showing)" : "") + "</span></span></button></li>";
+        }).join("") + "</ul>"
+      : "";
+
+    el.innerHTML = tabs + '<div class="pbody"><div class="pmain"><div class="stage">' + stage + "</div>" + info + "</div>" + list + "</div>" + more;
+  }
+
+  function mountPlayers() {
+    $$(".player").forEach(function (p) { renderPlayer(p, false); });
   }
 
   function topicHtml(t) {
     var isDone = done.has(t.id);
-    var showG = state.scope !== "ng", showN = state.scope !== "global";
-    var cols = (showG ? vidCol("Watch: global", t.g) : "") + (showN ? vidCol("Watch: Nigeria context", t.n) : "");
-    var one = (showG && showN) ? "" : " one";
+    sources[t.id] = function () { return groupsFor(t); };
     var refs = t.r.length ? '<div><h4>Read and use</h4><div class="refs">' + t.r.map(function (r) {
       return '<a class="ref" href="' + esc(r[1]) + '" target="_blank" rel="noopener noreferrer">' + esc(r[0]) + ' <i class="ph ph-arrow-up-right" aria-hidden="true"></i></a>';
     }).join("") + "</div></div>" : "";
@@ -100,7 +160,7 @@
       '<i class="ph ph-caret-down t-caret" aria-hidden="true"></i></summary>' +
       '<div class="t-body"><p class="t-sum">' + esc(t.summary) + '</p>' +
       '<div><h4>What you need to know</h4><ul class="know">' + t.know.map(function (k) { return "<li>" + esc(k) + "</li>"; }).join("") + "</ul></div>" +
-      '<div class="vids' + one + '">' + cols + "</div>" + refs +
+      '<div><h4>Watch</h4><div class="player" data-src="' + t.id + '" data-tab="" data-idx="0"></div></div>' + refs +
       '<button type="button" class="done-btn" data-done="' + t.id + '" aria-pressed="' + isDone + '"><i class="ph ph-check-circle" aria-hidden="true"></i><span>' + (isDone ? "Done" : "Mark as done") + "</span></button>" +
       "</div></details>";
   }
@@ -119,6 +179,7 @@
     $("#results").innerHTML = out;
     $("#side").innerHTML = side;
     $("#empty").hidden = total !== 0;
+    mountPlayers();
     observeTracks();
   }
 
@@ -181,6 +242,19 @@
       saveDone();
       return;
     }
+    var pl = e.target.closest(".player");
+    if (pl) {
+      var tb = e.target.closest("button[data-tab]"), pk = e.target.closest("[data-pick]"), pp = e.target.closest("[data-play]");
+      if (tb) { pl.dataset.tab = tb.dataset.tab; pl.dataset.idx = 0; renderPlayer(pl, false); return; }
+      if (pk || pp) {
+        if (pk) pl.dataset.idx = pk.dataset.pick;
+        $$(".player.playing").forEach(function (o2) { if (o2 !== pl) renderPlayer(o2, false); });
+        renderPlayer(pl, true);
+        var st = $(".stage", pl);
+        if (st && st.getBoundingClientRect().top < 70) st.scrollIntoView({ block: "center" });
+        return;
+      }
+    }
     var o = e.target.closest("[data-open]");
     if (o) { e.preventDefault(); openTopic(o.dataset.open); return; }
     var lf = e.target.closest("[data-level-filter]");
@@ -242,8 +316,10 @@
       "<dt>Study type</dt><dd>" + esc(g.s) + "</dd>" +
       "<dt>Appraisal tool</dt><dd>" + esc(g.a) + "</dd>" +
       "<dt>Good to know</dt><dd>" + esc(g.n) + "</dd></dl>" +
-      '<div class="out-actions"><a class="btn btn-primary" href="' + esc(g.u) + '" target="_blank" rel="noopener noreferrer">Open the checklist</a>' +
-      '<a class="btn btn-ghost" href="' + yt(g.g + " reporting guideline tutorial how to use") + '" target="_blank" rel="noopener noreferrer">Watch a tutorial</a></div>';
+      '<div class="out-actions"><a class="btn btn-primary" href="' + esc(g.u) + '" target="_blank" rel="noopener noreferrer">Open the checklist</a></div><div><h4 class="pl-h">Watch a tutorial</h4><div class="player" data-src="guide" data-tab="g" data-idx="0"></div></div>';
+    var gq = g.g + " reporting guideline tutorial how to use";
+    sources.guide = function () { return [{ key: "g", label: "Tutorials", vids: mergeVids([[g.g, gq]]), q: gq }]; };
+    renderPlayer($("#gOut .player"), false);
   }
   $("#gSel").innerHTML = GUIDES.map(function (g, i) { return '<option value="' + i + '">' + esc(g.s) + "</option>"; }).join("");
   $("#gSel").addEventListener("change", function (e) { renderGuide(+e.target.value); });

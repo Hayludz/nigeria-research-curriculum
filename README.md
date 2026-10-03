@@ -18,7 +18,7 @@ Open http://localhost:4173.
 
 ## Edit the content
 
-All content lives in `data.js`. Video entries are `[label, YouTube search query]`; each opens a live YouTube search so links never go stale. To pin a specific video, replace the generated URL logic in `app.js` (`yt()`) for that entry.
+Topics live in `data.js`. Video entries are `[label, YouTube search query]`. Run `node scripts/fetch-videos.mjs` to resolve each query to real, embeddable videos (written to `videos.json` and `videos.js`). To pin a specific video, edit that query's entry in `videos.json` and regenerate `videos.js`. Videos play in a custom lazy-loading player using youtube-nocookie.com.
 
 ## Deploy
 
