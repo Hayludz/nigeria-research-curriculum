@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nigeria Research Curriculum</title>
+  <meta name="description" content="A free, structured research curriculum for Nigerian researchers: methods, systematic reviews, statistics, ethics, funding and publishing, with YouTube lessons for every topic.">
+  <meta name="theme-color" content="#0a6b3c">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    try {
+      var t = localStorage.getItem("rc-theme");
+      if (t) document.documentElement.setAttribute("data-theme", t);
+    } catch (e) {}
+  </script>
+  <script src="https://unpkg.com/@phosphor-icons/web@2.1.1" defer></script>
+</head>
+<body>
+  <a class="skip" href="#library">Skip to the library</a>
+
+  <header class="top">
+    <div class="wrap top-in">
+      <a class="brand" href="#top" aria-label="Nigeria Research Curriculum home">
+        <span class="brand-mark" aria-hidden="true">NRC</span>
+        <span class="brand-name">Research Curriculum</span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="#library">Library</a>
+        <a href="#review">Review path</a>
+        <a href="#guidelines">Guidelines</a>
+        <a href="#directory">Directory</a>
+      </nav>
+      <div class="top-tools">
+        <span class="progress-pill" id="progressPill" aria-live="polite">0 of 0 done</span>
+        <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch colour theme">
+          <i class="ph ph-circle-half" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero wrap">
+      <div class="hero-copy">
+        <h1>Learn research properly, the global way and the Nigerian way.</h1>
+        <p class="lede">A structured curriculum with a curated YouTube lesson list for every topic, from first question to published systematic review.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#library">Start learning</a>
+          <a class="btn btn-ghost" href="#review">Systematic review path</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-labelledby="whereTitle">
+        <h2 id="whereTitle">Where are you now?</h2>
+        <div class="level-tabs" role="tablist" aria-label="Choose your level">
+          <button role="tab" aria-selected="true" data-level="Start here" id="tab-start">Beginner</button>
+          <button role="tab" aria-selected="false" data-level="Core" id="tab-core">Working researcher</button>
+          <button role="tab" aria-selected="false" data-level="Advanced" id="tab-adv">Advanced</button>
+        </div>
+        <p class="panel-note" id="levelNote"></p>
+        <ul class="path-list" id="pathList"></ul>
+        <dl class="stats" id="stats"></dl>
+      </aside>
+    </section>
+
+    <section class="section wrap" id="library" aria-labelledby="libTitle">
+      <div class="section-head">
+        <h2 id="libTitle">The library</h2>
+        <p>Each topic has the key points, global lessons, Nigeria-focused lessons and trusted references. Mark topics as done to track progress.</p>
+      </div>
+
+      <div class="toolbar" role="search">
+        <label class="search">
+          <span class="sr-only">Search topics</span>
+          <i class="ph ph-magnifying-glass" aria-hidden="true"></i>
+          <input id="q" type="search" placeholder="Search: PRISMA, logistic regression, ethics, TETFund" autocomplete="off">
+        </label>
+        <div class="seg" role="group" aria-label="Show videos from">
+          <button type="button" class="on" data-scope="all" aria-pressed="true">All lessons</button>
+          <button type="button" data-scope="global" aria-pressed="false">Global</button>
+          <button type="button" data-scope="ng" aria-pressed="false">Nigeria</button>
+        </div>
+        <label class="select-wrap">
+          <span class="sr-only">Level</span>
+          <select id="levelSel">
+            <option value="all">Every level</option>
+            <option value="Start here">Start here</option>
+            <option value="Core">Core</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="lib">
+        <nav class="side" id="side" aria-label="Tracks"></nav>
+        <div class="lib-main">
+          <div id="results" aria-live="polite"></div>
+          <div class="empty" id="empty" hidden>
+            <h3>No topics match that search</h3>
+            <p>Try a shorter word, or clear the filters to see everything.</p>
+            <button class="btn btn-ghost" id="clearBtn" type="button">Clear filters</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section wrap band" id="review" aria-labelledby="srTitle">
+      <div class="section-head">
+        <h2 id="srTitle">Systematic review path</h2>
+        <p>Twelve steps from question to publication. Tick them off as you go. Each step opens the matching lesson in the library.</p>
+      </div>
+      <ol class="steps" id="steps"></ol>
+    </section>
+
+    <section class="section wrap" id="guidelines" aria-labelledby="gTitle">
+      <div class="section-head">
+        <h2 id="gTitle">Which reporting guideline do I need?</h2>
+        <p>Pick your study type to see the checklist, the appraisal tool and a lesson to watch.</p>
+      </div>
+      <div class="finder">
+        <div class="finder-in">
+          <label for="gSel" class="field-label">My study is a</label>
+          <div class="select-wrap select-lg">
+            <select id="gSel"></select>
+          </div>
+        </div>
+        <div class="finder-out" id="gOut" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <section class="section wrap band" id="directory" aria-labelledby="dTitle">
+      <div class="section-head">
+        <h2 id="dTitle">Nigeria quick directory</h2>
+        <p>Regulators, funders, data sources and tools that Nigerian researchers use most.</p>
+      </div>
+      <div class="dir" id="dir"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <div class="wrap foot-in">
+      <p><strong>About the YouTube links.</strong> Each link opens a live YouTube search built for that topic, so it always works and shows current videos. Check the presenter and date, and prefer lessons from universities, Cochrane, WHO and recognised research training programmes.</p>
+      <p>Guidance changes. Always confirm ethics, funding and registration rules on the official site before you act. This is a learning resource and not legal or ethics advice.</p>
+    </div>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
